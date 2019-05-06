@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "266150641125",
+    "firebase_url": "https://facebookdemo-fc299.firebaseio.com",
+    "project_id": "facebookdemo-fc299",
+    "storage_bucket": "facebookdemo-fc299.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:266150641125:android:4060035280076379",
+        "android_client_info": {
+          "package_name": "com.lxf.facebookdemo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "266150641125-h8p2q606414l0lejkcul8decb4lqkvog.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD-1G0qgqPw6GmNxQ-HomdeUvpLHAvhRl0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "266150641125-h8p2q606414l0lejkcul8decb4lqkvog.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
