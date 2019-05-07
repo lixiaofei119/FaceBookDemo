@@ -37,9 +37,17 @@ import com.google.firebase.auth.FirebaseUser;
 
 import java.util.Arrays;
 
+/**
+ * facebook登录注意点：
+ * 1、facebook后台如未提交上线，还是开发中状态，测试需要添加测试账号
+ * 2、测试账号测试登录时可能会报key hash值不对，需要将此key添加到facebook后台配置中
+ * 3、与firebase关联时，注意不要遗漏验证链接地址配置
+ * 4、页面中调用时，主要onActivityResult回调不要遗漏
+ */
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private Button btnLogin;
-    private Button btnShare;
+    private Button btn_share_url;
+    private Button btn_share_pic;
     private CallbackManager callbackManager;
     private FirebaseAuth mAuth;
     private TextView tv_login_result;
@@ -52,18 +60,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
         btnLogin = findViewById(R.id.btn_login);
-        btnShare = findViewById(R.id.btn_share);
+        btn_share_url = findViewById(R.id.btn_share_url);
+        btn_share_pic = findViewById(R.id.btn_share_pic);
         tv_login_result = findViewById(R.id.tv_login_result);
 
 
         btnLogin.setOnClickListener(this);
-        btnShare.setOnClickListener(this);
+        btn_share_url.setOnClickListener(this);
+        btn_share_pic.setOnClickListener(this);
 
         callbackManager = CallbackManager.Factory.create();
         LoginManager.getInstance().registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) {
                 Toast.makeText(MainActivity.this, "登录成功", Toast.LENGTH_SHORT).show();
+                Log.e("lxf", "登录成功");
                 commitTongJi("facebook登录成功");
                 tv_login_result.setText("");
                 handleFacebookAccessToken(loginResult.getAccessToken());
@@ -72,6 +83,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onCancel() {
                 commitTongJi("facebook登录取消");
+                Log.e("lxf", "登录取消");
                 Toast.makeText(MainActivity.this, "登录取消", Toast.LENGTH_SHORT).show();
             }
 
@@ -79,6 +91,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public void onError(FacebookException error) {
                 commitTongJi("facebook登录失败");
                 commitTongJi("facebook登录失败：" + error.toString());
+                Log.e("lxf", "facebook登录失败");
                 tv_login_result.setText("facebook登录失败：" + error.toString());
                 Toast.makeText(MainActivity.this, "登录失败:" + error.toString(), Toast.LENGTH_SHORT).show();
             }
@@ -98,8 +111,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     LoginManager.getInstance().logInWithReadPermissions(this, Arrays.asList("public_profile", "user_friends"));
                 }
                 break;
-            case R.id.btn_share:
-                commitTongJi("点击分享");
+            case R.id.btn_share_url:
+                commitTongJi("点击分享链接");
+                shareUrl();
+                break;
+            case R.id.btn_share_pic:
+                commitTongJi("点击分享图片");
                 sharePic();
                 break;
             default:
