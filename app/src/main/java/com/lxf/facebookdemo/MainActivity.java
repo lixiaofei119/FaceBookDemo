@@ -15,9 +15,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.facebook.AccessToken;
+import com.facebook.AccessTokenTracker;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
+import com.facebook.GraphRequest;
+import com.facebook.GraphResponse;
+import com.facebook.Profile;
+import com.facebook.ProfileTracker;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.facebook.share.model.ShareLinkContent;
@@ -35,6 +40,8 @@ import com.google.firebase.auth.FacebookAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
+import org.json.JSONObject;
+
 import java.util.Arrays;
 
 /**
@@ -51,6 +58,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private CallbackManager callbackManager;
     private FirebaseAuth mAuth;
     private TextView tv_login_result;
+    private AccessTokenTracker accessTokenTracker;
+    private ProfileTracker profileTracker;
+    private GraphRequest request;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,8 +78,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btnLogin.setOnClickListener(this);
         btn_share_url.setOnClickListener(this);
         btn_share_pic.setOnClickListener(this);
-
+        // 初始化facebook登录回调
         callbackManager = CallbackManager.Factory.create();
+        // 注册facebook登录回调结果
         LoginManager.getInstance().registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) {
@@ -98,6 +109,71 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
 
         // LoginManager.getInstance().logInWithReadPermissions(this, Arrays.asList("public_profile"));
+        // 获取登录后的accesstoken，更具其值读取更多信息
+        accessTokenTracker = new AccessTokenTracker() {
+            @Override
+            protected void onCurrentAccessTokenChanged(AccessToken oldAccessToken, AccessToken currentAccessToken) {
+                Log.e("lxf", "oldAccessToken==" + oldAccessToken);
+                Log.e("lxf", "currentAccessToken==" + currentAccessToken);
+                AccessToken currentAccessToken1 = AccessToken.getCurrentAccessToken();
+                Log.e("lxf", "currentAccessToken1==" + currentAccessToken1);
+                // 用accesstoken更具需求获取对应的信息（id，姓名，性别，邮箱，头像，地域信息）
+                request = GraphRequest.newMeRequest(currentAccessToken1, new GraphRequest.GraphJSONObjectCallback() {
+                    @Override
+                    public void onCompleted(JSONObject object, GraphResponse response) {
+                        if (object != null) {
+                            //比如:1565455221565
+                            String id = object.optString("id");
+                            //比如：Zhang San
+                            String name = object.optString("name");
+                            //性别：比如 male （男）  female （女）
+                            String gender = object.optString("gender");
+                            //邮箱：比如：56236545@qq.com
+                            String emali = object.optString("email");
+
+                            //获取用户头像
+                            JSONObject object_pic = object.optJSONObject("picture");
+                            JSONObject object_data = object_pic.optJSONObject("data");
+                            String photo = object_data.optString("url");
+
+                            //获取地域信息
+                            //zh_CN 代表中文简体
+                            String locale = object.optString("locale");
+                            Log.e("lxf", "22 gender==" + gender);
+                            Log.e("lxf", "22 id==" + id);
+                            Log.e("lxf", "22 emali==" + emali);
+                            Log.e("lxf", "22 photo==" + photo.toString());
+                            Log.e("lxf", "22 locale==" + locale);
+                            Log.e("lxf", "22 name==" + name);
+                        } else {
+                            Log.e("lxf", "22 null null null ");
+                        }
+                    }
+                });
+                Bundle parameters = new Bundle();
+                parameters.putString("fields", "id,name,link,gender,birthday,email,picture,locale,updated_time,timezone,age_range,first_name,last_name");
+                request.setParameters(parameters);
+                request.executeAsync();
+            }
+        };
+        // 获取用户信息，名和id
+        profileTracker = new ProfileTracker() {
+            @Override
+            protected void onCurrentProfileChanged(Profile oldProfile, Profile currentProfile) {
+                String firstName = currentProfile.getFirstName();
+                String id = currentProfile.getId();
+                String lastName = currentProfile.getLastName();
+                Uri linkUri = currentProfile.getLinkUri();
+                String middleName = currentProfile.getMiddleName();
+                String name = currentProfile.getName();
+                Log.e("lxf", "firstName==" + firstName);
+                Log.e("lxf", "id==" + id);
+                Log.e("lxf", "lastName==" + lastName);
+                Log.e("lxf", "linkUri==" + linkUri.toString());
+                Log.e("lxf", "middleName==" + middleName);
+                Log.e("lxf", "name==" + name);
+            }
+        };
 
     }
 
@@ -206,5 +282,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onDestroy() {
         super.onDestroy();
         FirebaseAuth.getInstance().signOut();
+        accessTokenTracker.stopTracking();
+        profileTracker.stopTracking();
     }
 }
